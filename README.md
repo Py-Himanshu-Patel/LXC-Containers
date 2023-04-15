@@ -119,6 +119,53 @@ $ lxc exec dev bash
 # after moving inside another container ping another container
 ```
 
+## Setup SSH for LXC Continer and AgentForwarding
+
+Get the IP of container
+```
+$ lxc ls
++------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+| NAME |  STATE  |         IPV4         |                     IPV6                      |   TYPE    | SNAPSHOTS |
++------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+| dev  | RUNNING | 10.193.32.55 (eth0)  | fd42:c573:22ef:63f5::1 (lxdbr0)               | CONTAINER | 0         |
++------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+```
+### PermitRootLogin enabled for SSH
+```bash
+$ lxc exec dev bash
+root@dev:~# vi /etc/ssh/sshd_config
+```
+Update the config
+```
+PermitRootLogin yes
+PasswordAuthentication yes
+```
+
+### Put the Public Key of Host in LXD Container
+- Get the Public Key from host
+```bash
+$ cat ~/.ssh/id_rsa.pub 
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDQ0bdaqJf9xRqDdX++PeUGkHACIJWNsMIkpWjRHwHMm/+0ewTamJoHXfsCAOrEZSMUOkxuwTZsQbQw== himanshu.patel@clarisights.com
+```
+- Paste this key in LXC Container in a new line in below file
+```bash
+root@dev:~# vi ~/.ssh/authorized_keys
+
+root@dev:~# cat ~/.ssh/authorized_keys 
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDQ0bdaqJf9xRqDdX++PeUGkHACIJWNsMIkpWjRHwHMm/+0ewTamJoHXfsCAOrEZSMUOkxuwTZsQbQw== himanshu.patel@clarisights.com
+```
+
+### Save the SSH Config for LXD Container 
+On Host file system save the SSH config with `ForwardAgent` as `yes`.
+```
+~/.ssh $ cat config 
+Host dev
+		HostName 10.193.32.55
+		User 	root
+		ForwardAgent yes
+```
+This agent forwarding allow LXD container to use SSH Agent of host machine. Like git pull of code and other auth work like LXC is host itself.
+
 ## Container info and profiles
 
 - Get info of container
